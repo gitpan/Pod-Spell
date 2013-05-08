@@ -1,11 +1,8 @@
-README for Pod::Spell
-                                        Time-stamp: "2001-10-27 00:25:54 MDT"
-
-[The Pod-Spell dist properly contains Pod::Spell and Pod::Wordlist]
-
-
 NAME
-    Pod::Spell -- a formatter for spellchecking Pod
+    Pod::Spell - a formatter for spellchecking Pod
+
+VERSION
+    version 1.02
 
 SYNOPSIS
       % podspell Thing.pm | ispell
@@ -16,7 +13,7 @@ SYNOPSIS
       % perl -MPod::Spell -e "Pod::Spell->new->parse_from_filehandle"
       ...which takes POD on STDIN and sends formatted text to STDOUT
 
-    ...or instead of piping to spell or ispell, use `>temp.txt', and open
+    ...or instead of piping to spell or "ispell", use ">temp.txt", and open
     temp.txt in your word processor for spell-checking.
 
 DESCRIPTION
@@ -24,29 +21,36 @@ DESCRIPTION
     Pod::Spell rather like Pod::Text, except that it doesn't put much effort
     into actual formatting, and it suppresses things that look like Perl
     symbols or Perl jargon (so that your spellchecking program won't
-    complain about mystery words like "`$thing'" or "`Foo::Bar'" or
+    complain about mystery words like "$thing" or ""Foo::Bar"" or
     "hashref").
 
     This class provides no new public methods. All methods of interest are
     inherited from Pod::Parser (which see). The especially interesting ones
-    are `parse_from_filehandle' (which without arguments takes from STDIN
-    and sends to STDOUT) and `parse_from_file'. But you can probably just
+    are "parse_from_filehandle" (which without arguments takes from STDIN
+    and sends to STDOUT) and "parse_from_file". But you can probably just
     make do with the examples in the synopsis though.
 
     This class works by filtering out words that look like Perl or any form
-    of computerese (like "`$thing'" or "`N>7'" or "`@{$foo}{'bar','baz'}'",
+    of computerese (like "$thing" or ""N>7"" or ""@{$foo}{'bar','baz'}"",
     anything in C<...> or F<...> codes, anything in verbatim paragraphs
-    (codeblocks), and anything in the stopword list. The default stopword
+    (code blocks), and anything in the stopword list. The default stopword
     list for a document starts out from the stopword list defined by
     Pod::Wordlist, and can be supplemented (on a per-document basis) by
-    having `"=for stopwords"' / `"=for :stopwords"' region(s) in a document.
+    having "=for stopwords" / "=for :stopwords" region(s) in a document.
 
+METHODS
+  new
+  command
+  interior_sequence
+  textblock
+  verbatim
+  DEBUG
 ADDING STOPWORDS
-    You can add stopwords on a per-document basis with `"=for stopwords"' /
-    `"=for :stopwords"' regions, like so:
+    You can add stopwords on a per-document basis with "=for stopwords" /
+    "=for :stopwords" regions, like so:
 
       =for stopwords  plok Pringe zorch   snik !qux
-      foo bar baz quux quuux 
+      foo bar baz quux quuux
 
     This adds every word in that paragraph after "stopwords" to the stopword
     list, effective for the rest of the document. In such a list, words are
@@ -56,9 +60,9 @@ ADDING STOPWORDS
     deletes "qux" from the stopword list, if it was in there in the first
     place. Note that if a stopword is all-lowercase, then it means that it's
     okay in *any* case; but if the word has any capital letters, then it
-    means that it's okay *only* with *that* case. So a wordlist entry of
+    means that it's okay *only* with *that* case. So a Wordlist entry of
     "perl" would permit "perl", "Perl", and (less interestingly) "PERL",
-    "pERL", "PerL", et cetera. However, a wordlist entry of "Perl" catches
+    "pERL", "PerL", et cetera. However, a Wordlist entry of "Perl" catches
     only "Perl", not "perl". So if you wanted to make sure you said only
     "Perl", never "perl", you could add this to the top of your document:
 
@@ -79,7 +83,7 @@ ADDING STOPWORDS
       snik !qux
 
       foo bar
-      baz quux quuux 
+      baz quux quuux
 
       =end stopwords
 
@@ -90,8 +94,8 @@ ADDING STOPWORDS
       virtE<ugrave>
 
     ...meaning that you're adding a stopword of "virtù". If you left the ":"
-    out, that'd mean you were adding a stopword of "virtE<ugrave>" (with a
-    literal E, a literal <, etc), which will have no effect, since any
+    out, that would mean you were adding a stopword of "virtE<ugrave>" (with
+    a literal E, a literal <, etc), which will have no effect, since any
     occurrences of virtE<ugrave> don't look like a normal human-language
     word anyway, and so would be screened out before the stopword list is
     consulted anyway.
@@ -133,114 +137,21 @@ HINT
     words being missing and all. And you don't need a grammar checker to
     tell you that.
 
-COPYRIGHT AND DISCLAIMER
-    Copyright (c) 2001 Sean M. Burke. All rights reserved.
+BUGS
+    Please report any bugs or feature requests on the bugtracker website
+    https://github.com/xenoterracide/pod-spell/issues
 
-    This library is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself.
+    When submitting a bug or request, please include a test-file or a patch
+    to an existing test-file that illustrates the bug or desired feature.
 
-    The programs and documentation in this dist are distributed in the hope
-    that they will be useful, but without any warranty; without even the
-    implied warranty of merchantability or fitness for a particular purpose.
+AUTHORS
+    *   Sean M. Burke <sburke@cpan.org>
 
-AUTHOR
-    Sean M. Burke `sburke@cpan.org'
+    *   Caleb Cushing <xenoterracide@gmail.com>
 
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2013 by Sean M. Burke.
 
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
 
-
-
-NAME
-    Pod::Wordlist -- English words that come up in Perl documentation
-
-SYNOPSIS
-      None!  Take that!
-
-ABOUT
-    Pod::Wordlist is used by Pod::Spell, providing a set of words (as keys
-    in the hash `%Pod::Spell::Wordlist') that are English jargon words that
-    come up in Perl documentation, but which are not to be found in general
-    English lexicons. (For example: autovivify, backreference, chroot,
-    stringify, wantarray.)
-
-    You can also use this wordlist with your word processor by just pasting
-    `Pod/Wordlist.pm''s content into your wordprocessor, deleting the
-    leading Perl code so that only the wordlist remains, and then
-    spellchecking this resulting list and adding every word in it to your
-    private lexicon.
-
-CONTRIBUTING
-    You are welcome to send me your wordlists too, for possible
-    incorporation into this wordlist. I can take them only in ASCII.
-
-    Note that the scope of this file is only English, specifically American
-    English. (But you may find in useful to incorporate into your own
-    lexicons, even if they are for other dialects/languages.)
-
-COPYRIGHT AND DISCLAIMER
-    Copyright (c) 2001 Sean M. Burke. All rights reserved.
-
-    This library is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself.
-
-    This library is distributed in the hope that it will be useful, but
-    without any warranty; without even the implied warranty of
-    merchantability or fitness for a particular purpose.
-
-AUTHOR
-    Sean M. Burke, sburke@cpan.org
-
-    [NB: This wordlist includes much of a wordlist that Mark-Jason Dominus
-    gave me.]
-
-
-
-PREREQUISITES
-
-This suite requires Perl 5, Pod::Parser, Pod::Escapes, and Text::Wrap.
-
-
-INSTALLATION
-
-You install Pod::Spell, as you would install any perl module
-library, by running these commands:
-
-   perl Makefile.PL
-   make
-   make test
-   make install
-
-If you want to install a private copy of Pod::Spell in your home
-directory, then you should try to produce the initial Makefile with
-something like this command:
-
-  perl Makefile.PL LIB=~/perl
-
-See "perldoc permodinstall" for more information
-
-
-DOCUMENTATION
-
-POD-format documentation is included in Escapes.pm and Wordlist.pod.
-POD is readable with the 'perldoc' utility.  See ChangeLog for recent
-changes.
-
-
-MACPERL INSTALLATION NOTES
-
-Don't bother with the makefiles.  Just make a Pod directory in your
-MacPerl site_lib or lib directory, and move Spell.pm, Wordlist.pm, and
-Wordlist.pod into there.
-
-
-SUPPORT
-
-Questions, bug reports, useful code bits, and suggestions for
-Pod::Spell should just be sent to me at sburke@cpan.org
-
-
-AVAILABILITY
-
-The latest version of Pod::Spell is available from the
-Comprehensive Perl Archive Network (CPAN).  Visit
-<http://www.perl.com/CPAN/> to find a CPAN site near you.

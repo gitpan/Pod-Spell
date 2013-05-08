@@ -1,32 +1,81 @@
-# This -*- perl -*- script writes the Makefile for Pod::Spell
-# See perlmodinstall for installation help.
-#
-#                          Time-stamp: "2001-10-27 00:15:19 MDT"
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-require 5.004;
-use strict;
-use ExtUtils::MakeMaker;
 
-WriteMakefile(
-    'NAME'	=> 'Pod::Spell',
-    'VERSION_FROM' => 'Spell.pm', # finds $VERSION
-    'dist'        => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    'PREREQ_PM' => {
-        'Pod::Parser'  => 1.0,
-        'Text::Wrap'   => 1.0,
-        'Pod::Escapes' => 1.01,
-    },
-    'EXE_FILES' => [qw(podspell)],
+use strict;
+use warnings;
+
+
+
+use ExtUtils::MakeMaker 6.30;
+
+
+
+my %WriteMakefileArgs = (
+  "ABSTRACT" => "a formatter for spellchecking Pod",
+  "AUTHOR" => "Sean M. Burke <sburke\@cpan.org>, Caleb Cushing <xenoterracide\@gmail.com>",
+  "BUILD_REQUIRES" => {},
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
+  },
+  "DISTNAME" => "Pod-Spell",
+  "EXE_FILES" => [
+    "bin/podspell"
+  ],
+  "LICENSE" => "perl",
+  "NAME" => "Pod::Spell",
+  "PREREQ_PM" => {
+    "Carp" => 0,
+    "Pod::Escapes" => 0,
+    "Pod::Parser" => 0,
+    "Text::Wrap" => 0,
+    "base" => 0,
+    "constant" => 0,
+    "integer" => 0,
+    "locale" => 0,
+    "strict" => 0,
+    "warnings" => 0
+  },
+  "TEST_REQUIRES" => {
+    "File::Find" => 0,
+    "File::Temp" => 0,
+    "Test::More" => "0.88",
+    "Test::Most" => 0
+  },
+  "VERSION" => "1.02",
+  "test" => {
+    "TESTS" => "t/*.t"
+  }
 );
 
-package MY;
 
-sub libscan
-{ # Determine things that should *not* be installed
-    my($self, $path) = @_;
-    return '' if $path =~ m/~/;
-    $path;
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+  my $tr = delete $WriteMakefileArgs{TEST_REQUIRES};
+  my $br = $WriteMakefileArgs{BUILD_REQUIRES};
+  for my $mod ( keys %$tr ) {
+    if ( exists $br->{$mod} ) {
+      $br->{$mod} = $tr->{$mod} if $tr->{$mod} > $br->{$mod};
+    }
+    else {
+      $br->{$mod} = $tr->{$mod};
+    }
+  }
 }
 
-__END__
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
+

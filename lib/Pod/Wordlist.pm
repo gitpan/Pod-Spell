@@ -1,8 +1,80 @@
-require 5;
 package Pod::Wordlist;   # see Wordlist.pod for info
-$Pod::Wordlist::VERSION = '1.01'; # Time-stamp: "2001-10-27 00:02:11 MDT"
+use strict;
+use warnings;
+
+our $VERSION = '1.02'; # VERSION
+
+our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 while(<Pod::Wordlist::DATA>) { chomp($_); $Wordlist{$_} = 1 if m/\S/; }
 1;
+
+# ABSTRACT: English words that come up in Perl documentation
+
+=pod
+
+=head1 NAME
+
+Pod::Wordlist - English words that come up in Perl documentation
+
+=head1 VERSION
+
+version 1.02
+
+=head1 DESCRIPTION
+
+Pod::Wordlist is used by L<Pod::Spell|Pod::Spell>, providing a set of words
+(as keys in the hash C<%Pod::Spell::Wordlist>) that are English jargon
+words that come up in Perl documentation, but which are not to be found
+in general English lexicons.  (For example: autovivify, backreference,
+chroot, stringify, wantarray.)
+
+You can also use this wordlist with your word processor by just
+pasting C<Pod/Wordlist.pm>'s content into your wordprocessor, deleting
+the leading Perl code so that only the wordlist remains, and then
+spellchecking this resulting list and adding every word in it to your
+private lexicon.
+
+=head1 CONTRIBUTING
+
+You are welcome to send me your wordlists too, for possible incorporation
+into this wordlist.  I can take them only in ASCII.
+
+Note that the scope of this file is only English, specifically American
+English.  (But you may find in useful to incorporate into your own
+lexicons, even if they are for other dialects/languages.)
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website
+https://github.com/xenoterracide/pod-spell/issues
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
+
+=head1 AUTHORS
+
+=over 4
+
+=item *
+
+Sean M. Burke <sburke@cpan.org>
+
+=item *
+
+Caleb Cushing <xenoterracide@gmail.com>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Sean M. Burke.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+
 __DATA__
 Aas
 Abelson
@@ -96,6 +168,7 @@ bsearch
 bugfix
 bugfixes
 bugfixing
+bugtracker
 buildable
 builtin
 builtins
@@ -115,6 +188,7 @@ catdir
 catfile
 ccflags
 cd
+cetera
 charset
 chdir
 checksumming
@@ -134,6 +208,7 @@ coderef
 coderefs
 commifies
 compilable
+computerese
 config
 configurability
 coprocess
@@ -217,6 +292,7 @@ enum
 eof
 eq
 errno
+et
 euid
 eval
 evalled
@@ -265,6 +341,7 @@ followups
 fopen
 foreach
 foregrounded
+formatter
 formfeed
 formline
 formlines
@@ -720,6 +797,9 @@ Schwartzian
 Schwern
 SelfLoading
 SourceForge
+STDIN
+STDOUT
+STDERR
 Sugalski
 Sugalski's
 Sussman
@@ -789,6 +869,7 @@ soundex
 spam
 specifier
 specifiers
+spellcheck
 spellchecking
 sprintf
 sqrt
@@ -799,6 +880,8 @@ statfs
 statics
 stdio
 stdios
+stopword
+stopwords
 strcat
 strchr
 strcmp
@@ -995,6 +1078,9 @@ wcstombs
 wctomb
 whitespace
 wordpad
+wordlist
+wordlists
+wordprocessor
 wrapsuid
 writable
 XSUB's
@@ -1005,4 +1091,3 @@ yacc
 yylex
 Zakharevich
 zsh
-

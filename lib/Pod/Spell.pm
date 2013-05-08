@@ -1,20 +1,19 @@
-
-require 5;
-package Pod::Spell;    # Time-stamp: "2001-10-27 00:05:01 MDT"
+package Pod::Spell;
 use strict;
-use vars qw(@ISA $VERSION);
-$VERSION = '1.01';
-use Pod::Parser ();
-@ISA = ('Pod::Parser');
+use warnings;
 
-use constant MAXWORDLENGTH => 50; # max length of a word
+our $VERSION = '1.02'; # VERSION
+
+use base 'Pod::Parser';
+
+use constant MAXWORDLENGTH => 50; ## no critic ( ValuesAndExpressions::ProhibitConstantPragma )
 
 BEGIN { *DEBUG = sub () {0} unless defined &DEBUG }
 use Pod::Wordlist ();
 use Pod::Escapes ('e2char');
 use Text::Wrap ('wrap');
  # We don't need a very new version of Text::Wrap, altho they are nicer.
-$Text::Wrap::huge = 'overflow';
+$Text::Wrap::huge = 'overflow'; ## no critic ( Variables::ProhibitPackageVars )
 
 use integer;
 use locale;    # so our uc/lc works right
@@ -29,7 +28,7 @@ sub new {
   my $x = shift;
   my $new = $x->SUPER::new(@_);
   $new->{'spell_stopwords'} = { };
-  @{ $new->{'spell_stopwords'} }{ keys %Pod::Wordlist::Wordlist } = ();
+  @{ $new->{'spell_stopwords'} }{ keys %Pod::Wordlist::Wordlist } = (); ## no critic ( Variables::ProhibitPackageVars )
   $new->{'region'} = [];
   return $new;
 }
@@ -38,7 +37,7 @@ sub verbatim { return ''; } # totally ignore verbatim sections
 
 #----------------------------------------------------------------------
 
-sub _get_stopwords_from {
+sub _get_stopwords_from { ## no critic ( Subroutines::RequireArgUnpacking )
   my $stopwords = $_[0]{'spell_stopwords'};
 
   my $word;
@@ -61,7 +60,7 @@ sub _get_stopwords_from {
 sub textblock {
   my($self, $paragraph) = @_;
   if(@{ $self->{'region'} }) {
-    my $last = $self->{'region'}[-1];
+    my $last = $self->{'region'}[-1]; ## no critic ( NamingConventions::ProhibitAmbiguousNames )
     if($last eq 'stopwords') {
       $self->_get_stopwords_from( $paragraph );
       return;
@@ -80,12 +79,12 @@ sub textblock {
   return;
 }
 
-sub command {
+sub command { ## no critic ( Subroutines::RequireArgUnpacking )
   my $self = shift;
   my $command = shift;
   return if $command eq 'pod';
 
-  if($command eq 'begin') {
+  if($command eq 'begin') { ## no critic ( ControlStructures::ProhibitCascadingIfElse )
     my $region_name;
     #print "BEGIN <$_[0]>\n";
     if(shift(@_) =~ m/^\s*(\S+)/s) {
@@ -95,7 +94,7 @@ sub command {
     }
     DEBUG and print "~~~~ Beginning region \"$region_name\" ~~~~\n";
     push @{ $self->{'region'} }, $region_name;
-    
+
   } elsif($command eq 'end') {
     pop @{ $self->{'region'} }; # doesn't bother to check
 
@@ -125,7 +124,7 @@ sub command {
 
 #--------------------------------------------------------------------------
 
-sub interior_sequence {
+sub interior_sequence { ## no critic ( Subroutines::RequireFinalReturn )
   my $self = shift;
   my $command = shift;
 
@@ -170,7 +169,7 @@ sub interior_sequence {
 #==========================================================================
 # The guts:
 
-sub _treat_words {
+sub _treat_words { ## no critic ( Subroutines::RequireArgUnpacking )
   my $p = shift;
   # Count the things in $_[0]
   DEBUG > 1 and print "Content: <", $_[0], ">\n";
@@ -179,9 +178,9 @@ sub _treat_words {
   my $word;
   $_[0] =~ tr/\xA0\xAD/ /d;
     # i.e., normalize non-breaking spaces, and delete soft-hyphens
-  
+
   my $out = '';
-  
+
   my($leading, $trailing);
   while($_[0] =~ m<(\S+)>g) {
     # Trim normal English punctuation, if leading or trailing.
@@ -189,10 +188,10 @@ sub _treat_words {
     $word = $1;
     if( $word =~ s/^([\`\"\'\(\[])//s )
      { $leading = $1 } else { $leading = '' }
-    
+
     if( $word =~ s/([\)\]\'\"\.\:\;\,\?\!]+)$//s )
      { $trailing = $1 } else { $trailing = '' }
-    
+
     if($word =~ m/^[\&\%\$\@\:\<\*\\\_]/s
            # if it looks like it starts with a sigil, etc.
        or $word =~ m/[\%\^\&\#\$\@\_\<\>\(\)\[\]\{\}\\\*\:\+\/\=\|\`\~]/
@@ -220,11 +219,20 @@ sub _treat_words {
 #--------------------------------------------------------------------------
 
 1;
+
+# ABSTRACT: a formatter for spellchecking Pod
+
 __END__
+
+=pod
 
 =head1 NAME
 
-Pod::Spell -- a formatter for spellchecking Pod
+Pod::Spell - a formatter for spellchecking Pod
+
+=head1 VERSION
+
+version 1.02
 
 =head1 SYNOPSIS
 
@@ -236,9 +244,8 @@ Pod::Spell -- a formatter for spellchecking Pod
   % perl -MPod::Spell -e "Pod::Spell->new->parse_from_filehandle"
   ...which takes POD on STDIN and sends formatted text to STDOUT
 
-...or instead of piping to spell or ispell, use C<E<gt>temp.txt>, and open
+...or instead of piping to spell or C<ispell>, use C<E<gt>temp.txt>, and open
 F<temp.txt> in your word processor for spell-checking.
-
 
 =head1 DESCRIPTION
 
@@ -246,7 +253,7 @@ Pod::Spell is a Pod formatter whose output is good for
 spellchecking.  Pod::Spell rather like L<Pod::Text|Pod::Text>, except that
 it doesn't put much effort into actual formatting, and it suppresses things
 that look like Perl symbols or Perl jargon (so that your spellchecking
-program won't complain about mystery words like "C<$thing>" 
+program won't complain about mystery words like "C<$thing>"
 or "C<Foo::Bar>" or "hashref").
 
 This class provides no new public methods.  All methods of interest are
@@ -258,12 +265,25 @@ can probably just make do with the examples in the synopsis though.
 This class works by filtering out words that look like Perl or any
 form of computerese (like "C<$thing>" or "C<NE<gt>7>" or
 "C<@{$foo}{'bar','baz'}>", anything in CE<lt>...E<gt> or FE<lt>...E<gt>
-codes, anything in verbatim paragraphs (codeblocks), and anything
+codes, anything in verbatim paragraphs (code blocks), and anything
 in the stopword list.  The default stopword list for a document starts
 out from the stopword list defined by L<Pod::Wordlist|Pod::Wordlist>,
-and can be supplemented (on a per-document basis) by having 
+and can be supplemented (on a per-document basis) by having
 C<"=for stopwords"> / C<"=for :stopwords"> region(s) in a document.
 
+=head1 METHODS
+
+=head2 new
+
+=head2 command
+
+=head2 interior_sequence
+
+=head2 textblock
+
+=head2 verbatim
+
+=head2 DEBUG
 
 =head1 ADDING STOPWORDS
 
@@ -271,7 +291,7 @@ You can add stopwords on a per-document basis with
 C<"=for stopwords"> / C<"=for :stopwords"> regions, like so:
 
   =for stopwords  plok Pringe zorch   snik !qux
-  foo bar baz quux quuux 
+  foo bar baz quux quuux
 
 This adds every word in that paragraph after "stopwords" to the
 stopword list, effective for the rest of the document.  In such a
@@ -282,9 +302,9 @@ I<deleted> from the stopword list -- so "!qux" deletes "qux" from the
 stopword list, if it was in there in the first place.  Note that if
 a stopword is all-lowercase, then it means that it's okay in I<any>
 case; but if the word has any capital letters, then it means that
-it's okay I<only> with I<that> case.  So a wordlist entry of "perl"
+it's okay I<only> with I<that> case.  So a Wordlist entry of "perl"
 would permit "perl", "Perl", and (less interestingly) "PERL", "pERL",
-"PerL", et cetera.  However, a wordlist entry of "Perl" catches
+"PerL", et cetera.  However, a Wordlist entry of "Perl" catches
 only "Perl", not "perl".  So if you wanted to make sure you said
 only "Perl", never "perl", you could add this to the top of your
 document:
@@ -293,7 +313,7 @@ document:
 
 Then all instances of the word "Perl" would be weeded out of the
 Pod::Spell-formatted version of your document, but any instances of
-the word "perl" would be left in (unless they were in a CE<lt>...> or 
+the word "perl" would be left in (unless they were in a CE<lt>...> or
 FE<lt>...> style).
 
 You can have several "=for stopwords" regions in your document.  You
@@ -306,7 +326,7 @@ can even express them like so:
   snik !qux
 
   foo bar
-  baz quux quuux 
+  baz quux quuux
 
   =end stopwords
 
@@ -317,12 +337,11 @@ have to use ":stopwords", as here:
   virtE<ugrave>
 
 ...meaning that you're adding a stopword of "virtE<ugrave>".  If
-you left the ":" out, that'd mean you were adding a stopword of
+you left the ":" out, that would mean you were adding a stopword of
 "virtEE<lt>ugrave>" (with a literal E, a literal <, etc), which
 will have no effect, since  any occurrences of virtEE<lt>ugrave>
 don't look like a normal human-language word anyway, and so would
 be screened out before the stopword list is consulted anyway.
-
 
 =head1 USING Pod::Spell
 
@@ -333,7 +352,7 @@ My personal advice:
 =item *
 
 Write your documentation in Pod.  Pod is described in
-L<perlpod|perlpod>.  And L<perlmodstyle|perlmodstyle> has some
+L<perlpod>.  And L<perlmodstyle> has some
 advice on content.  This is the stage where you want to make sure
 you say everything you should, have good and working examples,
 and have coherent grammar.
@@ -358,7 +377,6 @@ Run it through podchecker again just for good measure.
 
 =back
 
-
 =head1 SEE ALSO
 
 L<Pod::Wordlist|Pod::Wordlist>
@@ -367,9 +385,7 @@ L<Pod::Parser|Pod::Parser>
 
 L<podchecker|podchecker> also known as L<Pod::Checker|Pod::Checker>
 
-L<perlpod|perlpod>, L<perlpodspec|perlpodspec>
-
-
+L<perlpod|perlpod>, L<perlpodspec>
 
 =head1 HINT
 
@@ -380,24 +396,34 @@ stopwords, this means you'll have ungrammatical sentences, what with
 words being missing and all.  And you don't need a grammar checker
 to tell you that.
 
+=head1 BUGS
 
+Please report any bugs or feature requests on the bugtracker website
+https://github.com/xenoterracide/pod-spell/issues
 
-=head1 COPYRIGHT AND DISCLAIMER
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
 
-Copyright (c) 2001 Sean M. Burke. All rights reserved.
+=head1 AUTHORS
 
-This library is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
+=over 4
 
-The programs and documentation in this dist are distributed in
-the hope that they will be useful, but without any warranty; without
-even the implied warranty of merchantability or fitness for a
-particular purpose.
+=item *
 
-=head1 AUTHOR
+Sean M. Burke <sburke@cpan.org>
 
-Sean M. Burke C<sburke@cpan.org>
+=item *
+
+Caleb Cushing <xenoterracide@gmail.com>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2013 by Sean M. Burke.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
