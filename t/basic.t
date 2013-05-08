@@ -1,60 +1,43 @@
 use strict;
 use warnings;
-use Test::Most;
-use File::Temp;
+use Test::More;
+use Test::Deep;
 
 use Pod::Spell;
 use Pod::Wordlist;
 
-my @them;
+is scalar( keys %Pod::Wordlist::Wordlist ), 1007, 'key count';
 
-cmp_ok(	0 + keys %Pod::Wordlist::Wordlist, '>', 0, 'many keys' );
+my ( $file0, $file1 );
+open( my $podfile, '+<',  \$file0 );
+open( my $textfile, '+<', \$file1 );
 
-my $podfile	= File::Temp->new;
-my $textfile = File::Temp->new;
+print $podfile "\n=head1 TEST undef\n"
+	. "\n=for stopwords zpaph myormsp pleumgh\n"
+	. "\n=for :stopwords !myormsp\n\n Glakq\n"
+	. "\nPleumgh zpaph myormsp snickh.\n\n"
+	;
 
-open(my $pod, '>' , $podfile ) || die "Can't make temp file '$podfile': $!";
-print $pod "\n=head1 TEST undef\n\n=for stopwords zpaph myormsp pleumgh\n\n=for :stopwords !myormsp\n\n Glakq\n\nPleumgh zpaph myormsp snickh.\n\n";
-close($pod);
+# reread from beginning
+$podfile->seek( 0, 0 );
 
-is -s $podfile, 123,	'podfile size';
+is length $file0, 123, 'podfile length';
 
-open($pod, '<', $podfile    ) || die "Can't read-open temp file '$podfile': $!";
-open(my $txt, '>', $textfile) || die "Can't write-open temp file '$textfile': $!";
+my $p = new_ok 'Pod::Spell' => [ debug => 1 ];
 
-my $p;
-lives_ok {
-	$p = Pod::Spell->new;
-} 'created parser object';
+$p->parse_from_filehandle( $podfile, $textfile );
 
-isa_ok( $p, 'Pod::Spell' );
+# reread from beginning
+$textfile->seek( 0, 0 );
 
-$p->parse_from_filehandle( $pod, $txt );
+my $in = do { local $/ = undef, <$textfile> };
 
-close($pod);
-close($txt);
+is length $file1, 26, 'textfile length';
 
-is -s $textfile, 26,	'textfile size';
+my @words = $in =~ m/(\w+)/g;
 
-open($txt, '<', $textfile) || die "Can't read-open temp file '$textfile': $!";
+is scalar @words, 3, 'word count';
 
-my $in = do { local $/ = undef, <$txt> };
-
-close($txt);
-
-is( length $in, -s $textfile, 'infile' );
-
-{
-	my $x = $in;
-	$x =~ s/\s+/ /g;
-
-	my @words = $in =~ m/(\w+)/g;
-
-	is scalar @words, 3, 'word count';
-
-	cmp_deeply( [ @words ], bag( qw( TEST myormsp snickh ) ), 'words match' )
-		or diag 'Content: ' . $x
-		;
-}
+cmp_deeply \@words, bag( qw( TEST myormsp snickh ) ), 'words match';
 
 done_testing;

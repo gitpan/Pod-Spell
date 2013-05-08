@@ -1,22 +1,22 @@
 package Pod::Spell;
+use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '1.02'; # VERSION
+our $VERSION = '1.03'; # VERSION
 
 use base 'Pod::Parser';
 
-use constant MAXWORDLENGTH => 50; ## no critic ( ValuesAndExpressions::ProhibitConstantPragma )
+use constant MAXWORDLENGTH => 50; ## no critic ( ProhibitConstantPragma )
 
-BEGIN { *DEBUG = sub () {0} unless defined &DEBUG }
-use Pod::Wordlist ();
+use Pod::Wordlist;
 use Pod::Escapes ('e2char');
-use Text::Wrap ('wrap');
- # We don't need a very new version of Text::Wrap, altho they are nicer.
-$Text::Wrap::huge = 'overflow'; ## no critic ( Variables::ProhibitPackageVars )
+use Text::Wrap   ('wrap');
 
-use integer;
-use locale;    # so our uc/lc works right
+# We don't need a very new version of Text::Wrap, altho they are nicer.
+$Text::Wrap::huge = 'overflow';  ## no critic ( Variables::ProhibitPackageVars )
+
+use locale;                      # so our uc/lc works right
 use Carp;
 
 #==========================================================================
@@ -25,195 +25,243 @@ use Carp;
 #
 
 sub new {
-  my $x = shift;
-  my $new = $x->SUPER::new(@_);
-  $new->{'spell_stopwords'} = { };
-  @{ $new->{'spell_stopwords'} }{ keys %Pod::Wordlist::Wordlist } = (); ## no critic ( Variables::ProhibitPackageVars )
-  $new->{'region'} = [];
-  return $new;
+	my ( $class, %args ) = @_;
+
+	my $new = $class->SUPER::new( %args );
+
+	$new->{'spell_stopwords'} = {};
+
+	$new->{'spell_stopwords'}
+		= \%Pod::Wordlist::Wordlist; ## no critic ( ProhibitPackageVars )
+
+	$new->{'region'} = [];
+
+	$new->{debug} = $args{debug};
+
+	return $new;
 }
 
-sub verbatim { return ''; } # totally ignore verbatim sections
+sub verbatim { return ''; }    # totally ignore verbatim sections
 
 #----------------------------------------------------------------------
 
-sub _get_stopwords_from { ## no critic ( Subroutines::RequireArgUnpacking )
-  my $stopwords = $_[0]{'spell_stopwords'};
+sub _is_debug {
+	my $self = shift;
 
-  my $word;
-  while($_[1] =~ m<(\S+)>g) {
-    $word = $1;
-    if($word =~ m/^!(.+)/s) {  # "!word" deletes from the stopword list
-      delete $stopwords->{$1};
-      DEBUG and print "Unlearning stopword $1\n";
-    } else {
-      $stopwords->{$1} = 1;
-      DEBUG and print "Learning stopword $1\n";
-    }
-  }
-  return;
+	return $self->{debug} ? 1 : 0;
+}
 
+sub _get_stopwords_from {
+	my ( $self, $text ) = @_;
+	my $stopwords = $self->{'spell_stopwords'};
+
+	while ( $text =~ m<(\S+)>g ) {
+		my $word = $1;
+		if ( $word =~ m/^!(.+)/s ) {
+			# "!word" deletes from the stopword list
+			my $negation = $1;
+			# different $1 from above
+			delete $stopwords->{$negation};
+			print "Unlearning stopword $word\n" if $self->_is_debug;
+		}
+		else {
+			$stopwords->{$word} = 1;
+			print "Learning stopword $1\n" if $self->_is_debug;
+		}
+	}
+	return;
 }
 
 #----------------------------------------------------------------------
 
 sub textblock {
-  my($self, $paragraph) = @_;
-  if(@{ $self->{'region'} }) {
-    my $last = $self->{'region'}[-1]; ## no critic ( NamingConventions::ProhibitAmbiguousNames )
-    if($last eq 'stopwords') {
-      $self->_get_stopwords_from( $paragraph );
-      return;
-    } elsif($last eq ':stopwords') {
-      $self->_get_stopwords_from( $self->interpolate($paragraph) );
-       # I guess that'd work.
-      return;
-    } elsif($last !~ m/^:/s) {
-      DEBUG and printf "Ignoring a textblock because inside a %s region.\n",
-        $self->{'region'}[-1];
-      return;
-    }
-     # else fall thru, as with a :footnote region or something...
-  }
-  $self->_treat_words( $self->interpolate($paragraph) );
-  return;
+	my ( $self, $paragraph ) = @_;
+
+	if ( @{ $self->{'region'} } ) {
+
+		my $last_region ## no critic ( ProhibitAmbiguousNames )
+			= $self->{'region'}[-1];
+
+		if ( $last_region eq 'stopwords' ) {
+			$self->_get_stopwords_from($paragraph);
+			return;
+		}
+		elsif ( $last_region eq ':stopwords' ) {
+			$self->_get_stopwords_from( $self->interpolate($paragraph) );
+
+			# I guess that'd work.
+			return;
+		}
+		elsif ( $last_region !~ m/^:/s ) {
+			printf "Ignoring a textblock because inside a %s region.\n",
+				$self->{'region'}[-1] if $self->_is_debug;
+			return;
+		}
+
+		# else fall thru, as with a :footnote region or something...
+	}
+	$self->_treat_words( $self->interpolate($paragraph) );
+	return;
 }
 
-sub command { ## no critic ( Subroutines::RequireArgUnpacking )
-  my $self = shift;
-  my $command = shift;
-  return if $command eq 'pod';
+sub command { ## no critic ( ArgUnpacking)
+	# why do I have to shift these?
+	my ( $self, $command, $text ) = ( shift, shift, @_ );
 
-  if($command eq 'begin') { ## no critic ( ControlStructures::ProhibitCascadingIfElse )
-    my $region_name;
-    #print "BEGIN <$_[0]>\n";
-    if(shift(@_) =~ m/^\s*(\S+)/s) {
-      $region_name = $1;
-    } else {
-      $region_name = 'WHATNAME';
-    }
-    DEBUG and print "~~~~ Beginning region \"$region_name\" ~~~~\n";
-    push @{ $self->{'region'} }, $region_name;
+	return if $command eq 'pod';
 
-  } elsif($command eq 'end') {
-    pop @{ $self->{'region'} }; # doesn't bother to check
+	if ( $command eq 'begin' )
+	{            ## no critic ( ControlStructures::ProhibitCascadingIfElse )
+		my $region_name;
 
-  } elsif($command eq 'for') {
-    if($_[0] =~ s/^\s*(\:?)stopwords\s*(.*)//s) {
-      my $para = $2;
-      $para = $self->interpolate($para) if $1;
-      DEBUG > 1 and print "Stopword para: <$2>\n";
-      $self->_get_stopwords_from( $para );
-    }
-  } elsif(@{ $self->{'region'} }) {  # TODO: accept POD formatting
-    # ignore
-  } elsif(
-    $command eq 'head1' or $command eq 'head2' or
-    $command eq 'head2' or $command eq 'head3' or
-    $command eq 'item'
-  ) {
-    my $out_fh = $self->output_handle();
-    print $out_fh "\n";
-    $self->_treat_words( $self->interpolate(shift) );
-    #print $out_fh "\n";
-  } else {
-    # no-op
-  }
-  return;
+		#print "BEGIN <$_[0]>\n";
+		if ( $text =~ m/^\s*(\S+)/s ) {
+			$region_name = $1;
+		}
+		else {
+			$region_name = 'WHATNAME';
+		}
+		print "~~~~ Beginning region \"$region_name\" ~~~~\n"
+			if $self->_is_debug;
+		push @{ $self->{'region'} }, $region_name;
+
+	}
+	elsif ( $command eq 'end' ) {
+		pop @{ $self->{'region'} };    # doesn't bother to check
+
+	}
+	elsif ( $command eq 'for' ) {
+		if ( $text =~ s/^\s*(\:?)stopwords\s*(.*)//s ) {
+			my $para = $2;
+			$para = $self->interpolate($para) if $1;
+			print "Stopword para: <$2>\n" if $self->_is_debug;
+			$self->_get_stopwords_from($para);
+		}
+	}
+	elsif ( @{ $self->{'region'} } ) {    # TODO: accept POD formatting
+		                                  # ignore
+	}
+	elsif ($command eq 'head1'
+		or $command eq 'head2'
+		or $command eq 'head2'
+		or $command eq 'head3'
+		or $command eq 'item' )
+	{
+		my $out_fh = $self->output_handle();
+		print $out_fh "\n";
+		$self->_treat_words( $self->interpolate(shift) );
+
+		#print $out_fh "\n";
+	}
+	return;
 }
 
 #--------------------------------------------------------------------------
 
 sub interior_sequence { ## no critic ( Subroutines::RequireFinalReturn )
-  my $self = shift;
-  my $command = shift;
+	my ( $self, $command, $seq_arg ) = @_;
 
-  return '' if $command eq 'X' or $command eq 'Z';
+	return '' if $command eq 'X' or $command eq 'Z';
 
-  local $_ = shift;
+	# Expand escapes into the actual character now, carping if invalid.
+	if ( $command eq 'E' ) {
+		my $it = e2char( $seq_arg );
+		if ( defined $it ) {
+			return $it;
+		}
+		else {
+			carp "Unknown escape: E<$seq_arg>";
+			return "E<$seq_arg>";
+		}
+	}
 
-  # Expand escapes into the actual character now, carping if invalid.
-  if ($command eq 'E') {
-    my $it = e2char($_);
-    if(defined $it) {
-      return $it;
-    } else {
-      carp "Unknown escape: E<$_>";
-      return "E<$_>";
-    }
-  }
+	# For all the other sequences, empty content produces no output.
+	return if $seq_arg eq '';
 
-  # For all the other sequences, empty content produces no output.
-  return if $_ eq '';
+	if ( $command eq 'B' or $command eq 'I' or $command eq 'S' ) {
+		$seq_arg;
+	}
+	elsif ( $command eq 'C' or $command eq 'F' ) {
 
-  if ($command eq 'B' or $command eq 'I' or $command eq 'S') {
-    $_;
-  } elsif ($command eq 'C' or $command eq 'F') {
-    # don't lose word-boundaries
-    my $out = '';
-    $out .= ' ' if s/^\s+//s;
-    my $append;
-    $append = 1 if s/\s+$//s;
-    $out .= '_' if length $_;
-     # which, if joined to another word, will set off the Perl-token alarm
-    $out .= ' ' if $append;
-    $out;
-  } elsif ($command eq 'L') {
-    return $1 if m/^([^|]+)\|/s;
-    '';
-  } else {
-    carp "Unknown sequence $command<$_>"
-  }
+		# don't lose word-boundaries
+		my $out = '';
+		$out .= ' ' if s/^\s+//s;
+		my $append;
+		$append = 1 if s/\s+$//s;
+		$out .= '_' if length $seq_arg;
+
+		# which, if joined to another word, will set off the Perl-token alarm
+		$out .= ' ' if $append;
+		$out;
+	}
+	elsif ( $command eq 'L' ) {
+		return $1 if m/^([^|]+)\|/s;
+		'';
+	}
+	else {
+		carp "Unknown sequence $command<$seq_arg>";
+	}
 }
 
 #==========================================================================
 # The guts:
 
-sub _treat_words { ## no critic ( Subroutines::RequireArgUnpacking )
-  my $p = shift;
-  # Count the things in $_[0]
-  DEBUG > 1 and print "Content: <", $_[0], ">\n";
+sub _treat_words {    ## no critic ( Subroutines::RequireArgUnpacking )
+	my $self = shift;
 
-  my $stopwords = $p->{'spell_stopwords'};
-  my $word;
-  $_[0] =~ tr/\xA0\xAD/ /d;
-    # i.e., normalize non-breaking spaces, and delete soft-hyphens
+	# Count the things in $_[0]
+	print "Content: <", $_[0], ">\n" if $self->_is_debug;
 
-  my $out = '';
+	my $stopwords = $self->{'spell_stopwords'};
+	my $word;
+	$_[0] =~ tr/\xA0\xAD/ /d;
 
-  my($leading, $trailing);
-  while($_[0] =~ m<(\S+)>g) {
-    # Trim normal English punctuation, if leading or trailing.
-    next if length $1 > MAXWORDLENGTH;
-    $word = $1;
-    if( $word =~ s/^([\`\"\'\(\[])//s )
-     { $leading = $1 } else { $leading = '' }
+	# i.e., normalize non-breaking spaces, and delete soft-hyphens
 
-    if( $word =~ s/([\)\]\'\"\.\:\;\,\?\!]+)$//s )
-     { $trailing = $1 } else { $trailing = '' }
+	my $out = '';
 
-    if($word =~ m/^[\&\%\$\@\:\<\*\\\_]/s
-           # if it looks like it starts with a sigil, etc.
-       or $word =~ m/[\%\^\&\#\$\@\_\<\>\(\)\[\]\{\}\\\*\:\+\/\=\|\`\~]/
-            # or contains anything strange
-    ) {
-      DEBUG and print "rejecting {$word}\n" unless $word eq '_';
-      next;
-    } else {
-      if(exists $stopwords->{$word} or exists $stopwords->{lc $word}) {
-        DEBUG and print " [Rejecting \"$word\" as a stopword]\n";
-      } else {
-        $out .= "$leading$word$trailing ";
-      }
-    }
-  }
+	my ( $leading, $trailing );
+	while ( $_[0] =~ m<(\S+)>g ) {
 
-  if(length $out) {
-    my $out_fh = $p->output_handle();
-    print $out_fh wrap('','',$out), "\n\n";
-  }
+		# Trim normal English punctuation, if leading or trailing.
+		next if length $1 > MAXWORDLENGTH;
+		$word = $1;
+		if   ( $word =~ s/^([\`\"\'\(\[])//s ) { $leading = $1 }
+		else                                   { $leading = '' }
 
-  return;
+		if   ( $word =~ s/([\)\]\'\"\.\:\;\,\?\!]+)$//s ) { $trailing = $1 }
+		else                                              { $trailing = '' }
+
+		if (
+			$word =~ m/^[\&\%\$\@\:\<\*\\\_]/s
+
+			# if it looks like it starts with a sigil, etc.
+			or $word =~ m/[\%\^\&\#\$\@\_\<\>\(\)\[\]\{\}\\\*\:\+\/\=\|\`\~]/
+
+			# or contains anything strange
+		  )
+		{
+			print "rejecting {$word}\n" if $self->_is_debug && $word ne '_';
+			next;
+		}
+		else {
+			if ( exists $stopwords->{$word} or exists $stopwords->{ lc $word } )
+			{
+				print " [Rejecting \"$word\" as a stopword]\n"
+					if $self->_is_debug;
+			}
+			else {
+				$out .= "$leading$word$trailing ";
+			}
+		}
+	}
+
+	if ( length $out ) {
+		my $out_fh = $self->output_handle();
+		print $out_fh wrap( '', '', $out ), "\n\n";
+	}
+
+	return;
 }
 
 #--------------------------------------------------------------------------
@@ -232,17 +280,18 @@ Pod::Spell - a formatter for spellchecking Pod
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 SYNOPSIS
 
-  % podspell Thing.pm | ispell
- or if you don't have a podspell:
-  % perl -MPod::Spell -e "Pod::Spell->new->parse_from_file(shift)" Thing.pm |spell |fmt
+	use Pod::Spell;
+	Pod::Spell->new->parse_from_file( 'File.pm' );
 
- or:
-  % perl -MPod::Spell -e "Pod::Spell->new->parse_from_filehandle"
-  ...which takes POD on STDIN and sends formatted text to STDOUT
+	Pod::Spell->new->parse_from_filehandle( $infile, $outfile );
+
+Also look at L<podspell>
+
+	% perl -MPod::Spell -e "Pod::Spell->new->parse_from_file(shift)" Thing.pm |spell |fmt
 
 ...or instead of piping to spell or C<ispell>, use C<E<gt>temp.txt>, and open
 F<temp.txt> in your word processor for spell-checking.
@@ -282,8 +331,6 @@ C<"=for stopwords"> / C<"=for :stopwords"> region(s) in a document.
 =head2 textblock
 
 =head2 verbatim
-
-=head2 DEBUG
 
 =head1 ADDING STOPWORDS
 
@@ -421,9 +468,10 @@ Caleb Cushing <xenoterracide@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Sean M. Burke.
+This software is Copyright (c) 2013 by Caleb Cushing.
 
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
+This is free software, licensed under:
+
+  The Artistic License 2.0 (GPL Compatible)
 
 =cut

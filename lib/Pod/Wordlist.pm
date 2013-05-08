@@ -1,11 +1,16 @@
-package Pod::Wordlist;   # see Wordlist.pod for info
+package Pod::Wordlist;
 use strict;
 use warnings;
 
-our $VERSION = '1.02'; # VERSION
+our $VERSION = '1.03'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
-while(<Pod::Wordlist::DATA>) { chomp($_); $Wordlist{$_} = 1 if m/\S/; }
+
+while ( <DATA> ) {
+	chomp( $_ );
+	$Wordlist{$_} = 1;
+}
+
 1;
 
 # ABSTRACT: English words that come up in Perl documentation
@@ -18,7 +23,7 @@ Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.02
+version 1.03
 
 =head1 DESCRIPTION
 
@@ -35,9 +40,6 @@ spellchecking this resulting list and adding every word in it to your
 private lexicon.
 
 =head1 CONTRIBUTING
-
-You are welcome to send me your wordlists too, for possible incorporation
-into this wordlist.  I can take them only in ASCII.
 
 Note that the scope of this file is only English, specifically American
 English.  (But you may find in useful to incorporate into your own
@@ -68,10 +70,11 @@ Caleb Cushing <xenoterracide@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Sean M. Burke.
+This software is Copyright (c) 2013 by Caleb Cushing.
 
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
+This is free software, licensed under:
+
+  The Artistic License 2.0 (GPL Compatible)
 
 =cut
 
@@ -583,7 +586,6 @@ NaN
 NaNs
 Nandor
 Napster
-Neeracher
 New
 nawk
 ncftp
@@ -791,18 +793,12 @@ rsh
 rsync
 runnable
 rvalue
-Salzenberg
-Sarathy
 Schwartzian
-Schwern
 SelfLoading
 SourceForge
 STDIN
 STDOUT
 STDERR
-Sugalski
-Sugalski's
-Sussman
 SVs
 Sx
 sbrace%s
@@ -1089,5 +1085,4 @@ xor
 YAPC's
 yacc
 yylex
-Zakharevich
 zsh

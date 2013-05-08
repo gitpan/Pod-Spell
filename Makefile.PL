@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-
+use 5.008;
 
 use ExtUtils::MakeMaker 6.30;
 
@@ -19,7 +19,7 @@ my %WriteMakefileArgs = (
   "EXE_FILES" => [
     "bin/podspell"
   ],
-  "LICENSE" => "perl",
+  "LICENSE" => "artistic_2",
   "NAME" => "Pod::Spell",
   "PREREQ_PM" => {
     "Carp" => 0,
@@ -28,7 +28,6 @@ my %WriteMakefileArgs = (
     "Text::Wrap" => 0,
     "base" => 0,
     "constant" => 0,
-    "integer" => 0,
     "locale" => 0,
     "strict" => 0,
     "warnings" => 0
@@ -36,10 +35,10 @@ my %WriteMakefileArgs = (
   "TEST_REQUIRES" => {
     "File::Find" => 0,
     "File::Temp" => 0,
-    "Test::More" => "0.88",
-    "Test::Most" => 0
+    "Test::Deep" => 0,
+    "Test::More" => "0.88"
   },
-  "VERSION" => "1.02",
+  "VERSION" => "1.03",
   "test" => {
     "TESTS" => "t/*.t"
   }
