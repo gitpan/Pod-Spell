@@ -2,7 +2,7 @@ package Pod::Wordlist;
 use strict;
 use warnings;
 
-our $VERSION = '1.04'; # VERSION
+our $VERSION = '1.05'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 
@@ -23,7 +23,7 @@ Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.04
+version 1.05
 
 =head1 DESCRIPTION
 
@@ -80,7 +80,6 @@ This is free software, licensed under:
 
 __DATA__
 Aas
-Abelson
 ACLs
 ActivePerl
 ActiveState
@@ -101,6 +100,8 @@ aliasing
 allocs
 alphabetics
 alphanumerics
+API
+APIs
 arcana
 args
 arrayref
@@ -192,6 +193,7 @@ catfile
 ccflags
 cd
 cetera
+changelog
 charset
 chdir
 checksumming
@@ -632,6 +634,7 @@ Prymmer
 Psion
 parens
 passwd
+passphrase
 patchlevel
 pathconf
 peeraddr
@@ -648,6 +651,7 @@ perlbot
 perlbug
 perlcc
 perlclib
+perlcritic
 perlcompile
 perlcygwin
 perldata
@@ -866,6 +870,7 @@ spam
 specifier
 specifiers
 spellcheck
+spellchecks
 spellchecking
 sprintf
 sqrt
