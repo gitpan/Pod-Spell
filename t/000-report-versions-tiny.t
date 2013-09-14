@@ -49,11 +49,16 @@ sub pmver {
 }
 
 eval { $v .= pmver('Carp','any version') };
+eval { $v .= pmver('Class::Tiny','any version') };
 eval { $v .= pmver('ExtUtils::MakeMaker','6.30') };
+eval { $v .= pmver('File::ShareDir::Install','0.03') };
+eval { $v .= pmver('File::ShareDir::ProjectDistDir','any version') };
+eval { $v .= pmver('File::Slurp','any version') };
 eval { $v .= pmver('File::Spec','any version') };
 eval { $v .= pmver('File::Temp','any version') };
 eval { $v .= pmver('IO::Handle','any version') };
 eval { $v .= pmver('IPC::Open3','any version') };
+eval { $v .= pmver('Lingua::EN::Inflect','any version') };
 eval { $v .= pmver('Pod::Coverage::TrustPod','any version') };
 eval { $v .= pmver('Pod::Escapes','any version') };
 eval { $v .= pmver('Pod::Parser','any version') };
