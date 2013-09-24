@@ -33,5 +33,5 @@ Golden
 dagolden
 lib
 Pod
-Spell
 Wordlist
+Spell

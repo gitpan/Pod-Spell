@@ -2,7 +2,7 @@ NAME
     Pod::Spell - a formatter for spellchecking Pod
 
 VERSION
-    version 1.07
+    version 1.08
 
 SYNOPSIS
             use Pod::Spell;
@@ -49,6 +49,9 @@ METHODS
             $self->stopwords->isa('Pod::WordList'); # true
 
 ADDING STOPWORDS
+    NOTE: Pod::Spell makes a single pass over the POD. Stopwords must be
+    added before they show up in the POD.
+
     You can add stopwords on a per-document basis with "=for stopwords" /
     "=for :stopwords" regions, like so:
 

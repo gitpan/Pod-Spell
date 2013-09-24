@@ -125,6 +125,7 @@ catdir
 catfile
 ccflags
 cd
+centric
 cetera
 CGIs
 changelog
@@ -194,7 +195,7 @@ dataset
 datastream
 datatype
 datestamp
-DateTime
+datetime
 DBI
 dbmclose
 dbmopen
@@ -861,6 +862,7 @@ resampling
 resending
 resolver
 reswap
+rethrow
 rethrown
 reusability
 reval
@@ -1063,6 +1065,7 @@ termios
 TeX
 textarea
 threadedness
+throwable
 timegm
 timelocal
 timestamp

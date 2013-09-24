@@ -3,7 +3,7 @@ use 5.006;
 use strict;
 use warnings;
 
-our $VERSION = '1.07'; # VERSION
+our $VERSION = '1.08'; # VERSION
 
 use base 'Pod::Parser';
 
@@ -208,7 +208,7 @@ Pod::Spell - a formatter for spellchecking Pod
 
 =head1 VERSION
 
-version 1.07
+version 1.08
 
 =head1 SYNOPSIS
 
@@ -265,6 +265,9 @@ C<"=for stopwords"> / C<"=for :stopwords"> region(s) in a document.
 	$self->stopwords->isa('Pod::WordList'); # true
 
 =head1 ADDING STOPWORDS
+
+B<NOTE:> Pod::Spell makes a single pass over the POD.  Stopwords
+must be added B<before> they show up in the POD.
 
 You can add stopwords on a per-document basis with
 C<"=for stopwords"> / C<"=for :stopwords"> regions, like so:
