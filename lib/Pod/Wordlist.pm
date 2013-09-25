@@ -12,7 +12,7 @@ use Class::Tiny {
 
 use constant MAXWORDLENGTH => 50; ## no critic ( ProhibitConstantPragma )
 
-our $VERSION = '1.08'; # VERSION
+our $VERSION = '1.09'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 
@@ -40,10 +40,23 @@ sub learn_stopwords {
 			print "Unlearning stopword $word\n" if $self->_is_debug;
 		}
 		else {
+			$word =~ s{'s$}{}; # we strip 's when checking so strip here, too
 			$stopwords->{$word} = 1;
 			$stopwords->{PL($word)} = 1;
-			print "Learning stopword $1\n" if $self->_is_debug;
+			print "Learning stopword $word\n" if $self->_is_debug;
 		}
+	}
+	return;
+}
+
+
+sub is_stopword {
+	my ($self, $word) = @_;
+	my $stopwords = $self->wordlist;
+	if ( exists $stopwords->{$word} or exists $stopwords->{ lc $word } ) {
+		print " [Rejecting \"$word\" as a stopword]\n"
+			if $self->_is_debug;
+		return 1;
 	}
 	return;
 }
@@ -55,70 +68,63 @@ sub strip_stopwords {
 	# Count the things in $text
 	print "Content: <", $text, ">\n" if $self->_is_debug;
 
-	my $stopwords = $self->wordlist;
-	my $word;
-	$text =~ tr/\xA0\xAD/ /d;
+	my @words = grep { length($_) < MAXWORDLENGTH } split " ", $text;
 
-	# i.e., normalize non-breaking spaces, and delete soft-hyphens
+	for ( @words ) {
+		# strip trailing punctuation; we don't strip periods so we don't
+		# chop abbreviations like "Ph.D."
+		s/[\)\]\'\"\:\;\,\?\!]+$//s;
 
-	my $out = '';
+		# strip possessive
+		s/'s$//is;
 
-	my ( $leading, $trailing );
-	while ( $text =~ m<(\S+)>g ) {
+		# strip leading punctuation
+		s/^[\`\"\'\(\[]+//s;
 
-		# Trim normal English punctuation, if leading or trailing.
-		next if length $1 > MAXWORDLENGTH;
-		$word = $1;
-		if   ( $word =~ s/^([\`\"\'\(\[])//s ) { $leading = $1 }
-		else                                   { $leading = '' }
+		# zero out variable names or things with internal symbols,
+		# since those are probably code expressions outside a C<>
+		my $is_sigil   = /^[\&\%\$\@\:\<\*\\\_]/;
+		my $is_strange = /[\%\^\&\#\$\@\_\<\>\(\)\[\]\{\}\\\*\:\+\/\=\|\`\~]/;
+		$_ = '' if $is_sigil || $is_strange;
 
-		if   ( $word =~ s/([\)\]\'\"\.\:\;\,\?\!]+)$//s ) { $trailing = $1 }
-		else                                              { $trailing = '' }
+		# stop if word was just punctuation and we stripped it all
+		# or if we zeroed it out;
+		next unless length;
 
-		if   ( $word =~ s/('s)$//s ) { $trailing = $1 . $trailing }
+		print "Found word: <$_>\n" if $self->_is_debug;
 
-		if (
-			# if it looks like it starts with a sigil, etc.
-			$word =~ m/^[\&\%\$\@\:\<\*\\\_]/s
-
-			# or contains anything strange
-			or $word =~ m/[\%\^\&\#\$\@\_\<\>\(\)\[\]\{\}\\\*\:\+\/\=\|\`\~]/
-
-		  )
-		{
-			print "rejecting {$word}\n" if $self->_is_debug && $word ne '_';
-			next;
-		}
-		else {
-			if ( exists $stopwords->{$word} or exists $stopwords->{ lc $word } )
-			{
-				print " [Rejecting \"$word\" as a stopword]\n"
-					if $self->_is_debug;
-			}
-			elsif ( $word =~ /-/ ) {
-				# check individual parts
-				my @keep;
-				for my $part ( split /-/, $word ) {
-					if ( exists $stopwords->{$part} or exists $stopwords->{ lc $part } )
-					{
-						print " [Rejecting \"$part\" as a stopword]\n"
-							if $self->_is_debug;
-					}
-					else {
-						push @keep, $part;
-					}
-				}
-				if ( @keep ) {
-					$out .= $leading . join( "-", @keep ) . "$trailing ";
-				}
-			}
-			else {
-				$out .= "$leading$word$trailing ";
-			}
-		}
+		# replace it with any stopword or stopword parts stripped
+		$_ = $self->_strip_a_word($_);
 	}
 
-	return $out;
+	return join(" ", grep { length } @words );
+}
+
+sub _strip_a_word {
+	my ($self, $word) = @_;
+	my $remainder = '';
+	# might have trailing period(s) or an internal dash, so first, just check
+	# as is in case that's actually in the word list
+	if ($self->is_stopword($word) ) {
+		# stopword, so do nothing
+	}
+	elsif ( $word =~ /-/ ) {
+		# check individual parts, keep whatever isn't a stopword
+		my @keep;
+		for my $part ( split /-/, $word ) {
+			push @keep, $part if ! $self->is_stopword( $part );
+		}
+		$remainder = join("-", @keep) if @keep;
+	}
+	elsif ( $word =~ m{(.*?)\.+$}) {
+		# trailing period could be end of sentence or ellipses
+		my $part = $1;
+		$remainder = $word if ! $self->is_stopword( $part );
+	}
+	else {
+		$remainder = $word;
+	}
+	return $remainder;
 }
 
 1;
@@ -135,7 +141,7 @@ Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.08
+version 1.09
 
 =head1 DESCRIPTION
 
@@ -166,6 +172,12 @@ This is the instance of the wordlist
 
 Modifies the stopword list based on a text block. See the rules
 for <adding stopwords|Pod::Spell/ADDING STOPWORDS> for details.
+
+=head2 is_stopword
+
+	if ( $wordlist->is_stopword( $word ) ) { ... }
+
+Returns true if the word is found in the stopword list.
 
 =head2 strip_stopwords
 
