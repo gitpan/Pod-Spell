@@ -24,6 +24,7 @@ t/release-dist-manifest.t
 t/release-distmeta.t
 t/release-meta-json.t
 t/release-minimum-version.t
+t/release-mojibake.t
 t/release-pod-coverage.t
 t/release-pod-linkcheck.t
 t/release-pod-syntax.t
@@ -31,3 +32,4 @@ t/release-portability.t
 t/release-test-version.t
 t/release-unused-vars.t
 t/text-block.t
+t/utf8.t

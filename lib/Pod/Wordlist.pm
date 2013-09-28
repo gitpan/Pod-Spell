@@ -8,11 +8,12 @@ use File::ShareDir::ProjectDistDir qw( dist_file );
 use Class::Tiny {
     wordlist  => \&_copy_wordlist,
     _is_debug => 0,
+    no_wide_chars => 0,
 };
 
 use constant MAXWORDLENGTH => 50; ## no critic ( ProhibitConstantPragma )
 
-our $VERSION = '1.09'; # VERSION
+our $VERSION = '1.10'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 
@@ -37,13 +38,13 @@ sub learn_stopwords {
 			# different $1 from above
 			delete $stopwords->{$negation};
 			delete $stopwords->{PL($negation)};
-			print "Unlearning stopword $word\n" if $self->_is_debug;
+			print "Unlearning stopword <$negation>\n" if $self->_is_debug;
 		}
 		else {
 			$word =~ s{'s$}{}; # we strip 's when checking so strip here, too
 			$stopwords->{$word} = 1;
 			$stopwords->{PL($word)} = 1;
-			print "Learning stopword $word\n" if $self->_is_debug;
+			print "Learning stopword   <$word>\n" if $self->_is_debug;
 		}
 	}
 	return;
@@ -54,8 +55,7 @@ sub is_stopword {
 	my ($self, $word) = @_;
 	my $stopwords = $self->wordlist;
 	if ( exists $stopwords->{$word} or exists $stopwords->{ lc $word } ) {
-		print " [Rejecting \"$word\" as a stopword]\n"
-			if $self->_is_debug;
+		print "  Rejecting   <$word>\n" if $self->_is_debug;
 		return 1;
 	}
 	return;
@@ -71,15 +71,25 @@ sub strip_stopwords {
 	my @words = grep { length($_) < MAXWORDLENGTH } split " ", $text;
 
 	for ( @words ) {
-		# strip trailing punctuation; we don't strip periods so we don't
-		# chop abbreviations like "Ph.D."
-		s/[\)\]\'\"\:\;\,\?\!]+$//s;
-
-		# strip possessive
-		s/'s$//is;
+		print "Parsing word: <$_>\n" if $self->_is_debug;
+		# some spellcheckers can't cope with anything but Latin1
+		$_ = '' if $self->no_wide_chars && /[^\x00-\xFF]/;
 
 		# strip leading punctuation
-		s/^[\`\"\'\(\[]+//s;
+		s/^[\(\[\{\'\"\:\;\,\?\!\.]+//;
+
+		# keep everything up to trailing punctuation, not counting
+		# periods (for abbreviations like "Ph.D."), single-quotes
+		# (for contractions like "don't") or colons (for package
+		# names like "Foo::Bar")
+		s/^([^\)\]\}\"\;\,\?\!]+).*$/$1/;
+
+		# strip trailing single-quote, periods or colons; after this
+		# we have a word that could have internal periods or quotes
+		s/[\.\'\:]+$//;
+
+		# strip possessive
+		s/'s$//i;
 
 		# zero out variable names or things with internal symbols,
 		# since those are probably code expressions outside a C<>
@@ -87,14 +97,17 @@ sub strip_stopwords {
 		my $is_strange = /[\%\^\&\#\$\@\_\<\>\(\)\[\]\{\}\\\*\:\+\/\=\|\`\~]/;
 		$_ = '' if $is_sigil || $is_strange;
 
-		# stop if word was just punctuation and we stripped it all
-		# or if we zeroed it out;
-		next unless length;
+		# stop if there are no "word" characters left; if it's just
+		# punctuation that we didn't happen to strip or it's weird glyphs,
+		# the spellchecker won't do any good anyway
+		next unless /\w/;
 
-		print "Found word: <$_>\n" if $self->_is_debug;
+		print "  Checking as <$_>\n" if $self->_is_debug;
 
 		# replace it with any stopword or stopword parts stripped
 		$_ = $self->_strip_a_word($_);
+
+		print "  Keeping as  <$_>\n" if $_ && $self->_is_debug;
 	}
 
 	return join(" ", grep { length } @words );
@@ -102,25 +115,28 @@ sub strip_stopwords {
 
 sub _strip_a_word {
 	my ($self, $word) = @_;
-	my $remainder = '';
-	# might have trailing period(s) or an internal dash, so first, just check
-	# as is in case that's actually in the word list
-	if ($self->is_stopword($word) ) {
-		# stopword, so do nothing
+	my $remainder;
+
+	# internal period could be abbreviations, so check with
+	# trailing period restored and drop or keep on that basis
+	if ( /\./ ) {
+		my $abbr = "$word.";
+		$remainder = $self->is_stopword($abbr) ? '' : $abbr;
 	}
+	# try word as-is, including possible hyphenation vs stoplist
+	elsif ($self->is_stopword($word) ) {
+		$remainder = '';
+	}
+	# check individual parts of hyphenated word, keep whatever isn't a
+	# stopword as individual words
 	elsif ( $word =~ /-/ ) {
-		# check individual parts, keep whatever isn't a stopword
 		my @keep;
 		for my $part ( split /-/, $word ) {
 			push @keep, $part if ! $self->is_stopword( $part );
 		}
-		$remainder = join("-", @keep) if @keep;
+		$remainder = join(" ", @keep) if @keep;
 	}
-	elsif ( $word =~ m{(.*?)\.+$}) {
-		# trailing period could be end of sentence or ellipses
-		my $part = $1;
-		$remainder = $word if ! $self->is_stopword( $part );
-	}
+	# otherwise, we just keep it
 	else {
 		$remainder = $word;
 	}
@@ -141,7 +157,7 @@ Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.09
+version 1.10
 
 =head1 DESCRIPTION
 
@@ -163,6 +179,11 @@ private lexicon.
 	ref $self->wordlist eq 'HASH'; # true
 
 This is the instance of the wordlist
+
+=head2 no_wide_chars
+
+If true, words with characters outside the Latin-1 range C<0x00> to C<0xFF> will
+be stripped like stopwords.
 
 =head1 METHODS
 

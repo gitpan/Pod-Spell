@@ -2,7 +2,7 @@ NAME
     Pod::Spell - a formatter for spellchecking Pod
 
 VERSION
-    version 1.09
+    version 1.10
 
 SYNOPSIS
             use Pod::Spell;
@@ -47,6 +47,28 @@ METHODS
   verbatim
   stopwords
             $self->stopwords->isa('Pod::WordList'); # true
+
+ENCODINGS
+    Pod::Parser, which Pod::Spell extends, is extremely naive about
+    character encodings. The "parse_from_file" method does not apply any
+    PerlIO encoding layer. If your Pod file is encoded in UTF-8, your data
+    will be read incorrectly.
+
+    You should instead use "parse_from_filehandle" and manage the input and
+    output layers yourself.
+
+            binmode($_, ":utf8") for ($infile, $outfile);
+            $my ps = Pod::Spell->new;
+            $ps->parse_from_filehandle( $infile, $outfile );
+
+    If your output destination cannot handle UTF-8, you should set your
+    output handle to Latin-1 and tell Pod::Spell to strip out words with
+    wide characters.
+
+            binmode($infile, ":utf8");
+            binmode($outfile, ":encoding(latin1)");
+            $my ps = Pod::Spell->new( no_wide_chars => 1 );
+            $ps->parse_from_filehandle( $infile, $outfile );
 
 ADDING STOPWORDS
     NOTE: Pod::Spell makes a single pass over the POD. Stopwords must be

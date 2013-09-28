@@ -49,7 +49,7 @@
             "base" : "0",
             "constant" : "0",
             "locale" : "0",
-            "perl" : "5.006",
+            "perl" : "5.008",
             "strict" : "0",
             "warnings" : "0"
          }
@@ -61,18 +61,19 @@
             "IO::Handle" : "0",
             "IPC::Open3" : "0",
             "Test::Deep" : "0",
-            "Test::More" : "0.88"
+            "Test::More" : "0.88",
+            "utf8" : "0"
          }
       }
    },
    "provides" : {
       "Pod::Spell" : {
          "file" : "lib/Pod/Spell.pm",
-         "version" : "1.09"
+         "version" : "1.10"
       },
       "Pod::Wordlist" : {
          "file" : "lib/Pod/Wordlist.pm",
-         "version" : "1.09"
+         "version" : "1.10"
       }
    },
    "release_status" : "stable",
@@ -87,7 +88,7 @@
          "web" : "https://github.com/xenoterracide/pod-spell"
       }
    },
-   "version" : "1.09",
+   "version" : "1.10",
    "x_contributors" : [
       "David Golden <dagolden@cpan.org>"
    ]
