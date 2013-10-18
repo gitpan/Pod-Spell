@@ -13,7 +13,7 @@ use Class::Tiny {
 
 use constant MAXWORDLENGTH => 50; ## no critic ( ProhibitConstantPragma )
 
-our $VERSION = '1.10'; # VERSION
+our $VERSION = '1.11'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 
@@ -151,13 +151,15 @@ __END__
 
 =pod
 
+=encoding latin1
+
 =head1 NAME
 
 Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.10
+version 1.11
 
 =head1 DESCRIPTION
 

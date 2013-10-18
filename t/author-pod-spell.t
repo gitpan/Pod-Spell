@@ -31,6 +31,9 @@ xenoterracide
 David
 Golden
 dagolden
+Olivier
+Mengué
+dolmen
 lib
 Pod
 Wordlist
