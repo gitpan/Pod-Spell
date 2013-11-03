@@ -3,7 +3,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '1.12'; # VERSION
+our $VERSION = '1.13'; # VERSION
 
 use base 'Pod::Parser';
 
@@ -205,7 +205,7 @@ __END__
 
 =pod
 
-=encoding latin1
+=encoding UTF-8
 
 =head1 NAME
 
@@ -213,7 +213,7 @@ Pod::Spell - a formatter for spellchecking Pod
 
 =head1 VERSION
 
-version 1.12
+version 1.13
 
 =head1 SYNOPSIS
 
@@ -406,7 +406,7 @@ David Golden <dagolden@cpan.org>
 
 =item *
 
-Olivier Mengué <dolmen@cpan.org>
+Olivier MenguÃ© <dolmen@cpan.org>
 
 =back
 
