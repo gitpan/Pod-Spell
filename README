@@ -2,7 +2,7 @@ NAME
     Pod::Spell - a formatter for spellchecking Pod
 
 VERSION
-    version 1.13
+    version 1.14
 
 SYNOPSIS
             use Pod::Spell;
@@ -119,7 +119,7 @@ ADDING STOPWORDS
       =for :stopwords
       virtE<ugrave>
 
-    ...meaning that you're adding a stopword of "virtÃ¹". If you left the ":"
+    ...meaning that you're adding a stopword of "virtù". If you left the ":"
     out, that would mean you were adding a stopword of "virtE<ugrave>" (with
     a literal E, a literal <, etc), which will have no effect, since any
     occurrences of virtE<ugrave> don't look like a normal human-language
@@ -165,7 +165,7 @@ BUGS
 CONTRIBUTORS
     *   David Golden <dagolden@cpan.org>
 
-    *   Olivier MenguÃ© <dolmen@cpan.org>
+    *   Olivier Mengué <dolmen@cpan.org>
 
 AUTHORS
     *   Sean M. Burke <sburke@cpan.org>
@@ -173,7 +173,7 @@ AUTHORS
     *   Caleb Cushing <xenoterracide@gmail.com>
 
 COPYRIGHT AND LICENSE
-    This software is Copyright (c) 2013 by Caleb Cushing.
+    This software is Copyright (c) 2014 by Caleb Cushing.
 
     This is free software, licensed under:
 

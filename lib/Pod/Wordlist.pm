@@ -1,9 +1,9 @@
 package Pod::Wordlist;
 use strict;
 use warnings;
-use File::Slurp                    qw( read_file );
-use Lingua::EN::Inflect            qw( PL        );
-use File::ShareDir::ProjectDistDir qw( dist_file );
+use Lingua::EN::Inflect 'PL';
+use File::ShareDir::ProjectDistDir 0.005
+	dist_file => defaults => { pathtiny => 1 };
 
 use Class::Tiny {
     wordlist  => \&_copy_wordlist,
@@ -13,14 +13,13 @@ use Class::Tiny {
 
 use constant MAXWORDLENGTH => 50; ## no critic ( ProhibitConstantPragma )
 
-our $VERSION = '1.13'; # VERSION
+our $VERSION = '1.14'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 
 sub _copy_wordlist { return { %Wordlist } }
 
-foreach ( read_file( dist_file('Pod-Spell', 'wordlist') ) ) {
-	chomp( $_ );
+foreach ( dist_file('Pod-Spell', 'wordlist')->lines({ chomp => 1 })) {
 	$Wordlist{$_} = 1;
 	$Wordlist{PL($_)} = 1;
 }
@@ -159,7 +158,7 @@ Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.13
+version 1.14
 
 =head1 DESCRIPTION
 
@@ -247,7 +246,7 @@ Caleb Cushing <xenoterracide@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2013 by Caleb Cushing.
+This software is Copyright (c) 2014 by Caleb Cushing.
 
 This is free software, licensed under:
 
