@@ -11,9 +11,9 @@ bin/podspell
 lib/Pod/Spell.pm
 lib/Pod/Wordlist.pm
 perlcritic.rc
-share/wordlist
+share/dist/Pod-Spell/wordlist
 t/00-compile.t
-t/000-report-versions-tiny.t
+t/00-report-prereqs.t
 t/author-critic.t
 t/author-pod-spell.t
 t/author-test-eol.t

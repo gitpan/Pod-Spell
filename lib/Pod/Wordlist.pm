@@ -2,8 +2,8 @@ package Pod::Wordlist;
 use strict;
 use warnings;
 use Lingua::EN::Inflect 'PL';
-use File::ShareDir::ProjectDistDir 0.005
-	dist_file => defaults => { pathtiny => 1 };
+use File::ShareDir::ProjectDistDir 1.000
+	dist_file => defaults => { pathtiny => 1 , strict => 1 };
 
 use Class::Tiny {
     wordlist  => \&_copy_wordlist,
@@ -13,13 +13,13 @@ use Class::Tiny {
 
 use constant MAXWORDLENGTH => 50; ## no critic ( ProhibitConstantPragma )
 
-our $VERSION = '1.14'; # VERSION
+our $VERSION = '1.15'; # VERSION
 
 our %Wordlist; ## no critic ( Variables::ProhibitPackageVars )
 
 sub _copy_wordlist { return { %Wordlist } }
 
-foreach ( dist_file('Pod-Spell', 'wordlist')->lines({ chomp => 1 })) {
+foreach ( dist_file('Pod-Spell', 'wordlist')->lines_utf8({ chomp => 1 })) {
 	$Wordlist{$_} = 1;
 	$Wordlist{PL($_)} = 1;
 }
@@ -158,7 +158,7 @@ Pod::Wordlist - English words that come up in Perl documentation
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 DESCRIPTION
 

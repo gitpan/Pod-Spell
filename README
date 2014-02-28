@@ -2,7 +2,7 @@ NAME
     Pod::Spell - a formatter for spellchecking Pod
 
 VERSION
-    version 1.14
+    version 1.15
 
 SYNOPSIS
             use Pod::Spell;
@@ -164,6 +164,8 @@ BUGS
 
 CONTRIBUTORS
     *   David Golden <dagolden@cpan.org>
+
+    *   Kent Fredric <kentfredric@gmail.com>
 
     *   Olivier Mengué <dolmen@cpan.org>
 

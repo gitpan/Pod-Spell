@@ -3,7 +3,7 @@ use 5.008;
 use strict;
 use warnings;
 
-our $VERSION = '1.14'; # VERSION
+our $VERSION = '1.15'; # VERSION
 
 use base 'Pod::Parser';
 
@@ -213,7 +213,7 @@ Pod::Spell - a formatter for spellchecking Pod
 
 =head1 VERSION
 
-version 1.14
+version 1.15
 
 =head1 SYNOPSIS
 
@@ -403,6 +403,10 @@ feature.
 =item *
 
 David Golden <dagolden@cpan.org>
+
+=item *
+
+Kent Fredric <kentfredric@gmail.com>
 
 =item *
 

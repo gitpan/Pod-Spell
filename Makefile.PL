@@ -8,7 +8,7 @@ use 5.008;
 use ExtUtils::MakeMaker 6.30;
 
 use File::ShareDir::Install;
-install_share dist => "share";
+install_share dist => "share\/dist\/Pod\-Spell";
 
 
 my %WriteMakefileArgs = (
@@ -28,7 +28,7 @@ my %WriteMakefileArgs = (
   "PREREQ_PM" => {
     "Carp" => 0,
     "Class::Tiny" => 0,
-    "File::ShareDir::ProjectDistDir" => "0.005",
+    "File::ShareDir::ProjectDistDir" => "1.000",
     "Lingua::EN::Inflect" => 0,
     "Pod::Escapes" => 0,
     "Pod::Parser" => 0,
@@ -40,15 +40,19 @@ my %WriteMakefileArgs = (
     "warnings" => 0
   },
   "TEST_REQUIRES" => {
+    "ExtUtils::MakeMaker" => 0,
     "File::Spec" => 0,
+    "File::Spec::Functions" => 0,
     "File::Temp" => 0,
     "IO::Handle" => 0,
     "IPC::Open3" => 0,
+    "List::Util" => 0,
     "Test::Deep" => 0,
-    "Test::More" => "0.88",
-    "utf8" => 0
+    "Test::More" => 0,
+    "utf8" => 0,
+    "version" => 0
   },
-  "VERSION" => "1.14",
+  "VERSION" => "1.15",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -58,22 +62,26 @@ my %WriteMakefileArgs = (
 my %FallbackPrereqs = (
   "Carp" => 0,
   "Class::Tiny" => 0,
-  "File::ShareDir::ProjectDistDir" => "0.005",
+  "ExtUtils::MakeMaker" => 0,
+  "File::ShareDir::ProjectDistDir" => "1.000",
   "File::Spec" => 0,
+  "File::Spec::Functions" => 0,
   "File::Temp" => 0,
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
   "Lingua::EN::Inflect" => 0,
+  "List::Util" => 0,
   "Pod::Escapes" => 0,
   "Pod::Parser" => 0,
   "Test::Deep" => 0,
-  "Test::More" => "0.88",
+  "Test::More" => 0,
   "Text::Wrap" => 0,
   "base" => 0,
   "constant" => 0,
   "locale" => 0,
   "strict" => 0,
   "utf8" => 0,
+  "version" => 0,
   "warnings" => 0
 );
 
